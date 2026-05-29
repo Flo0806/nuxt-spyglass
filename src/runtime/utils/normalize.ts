@@ -4,7 +4,7 @@ import type { LogLevel, LogSource } from '../types'
 // conservative; tune against real projects. Misclassification only hides an
 // entry from default queries (it's still stored and retrievable), never drops it.
 const NOISE_PATTERNS: Record<LogSource, string[]> = {
-  browser: ['[Vue warn]', 'Nuxt DevTools', 'is an experimental feature'],
+  browser: ['[Vue warn]', 'Nuxt DevTools', 'is an experimental feature', '[vite]'],
   server: ['Vite server', 'Vite client', 'warmed up', 'Nuxt Nitro server built'],
 }
 
