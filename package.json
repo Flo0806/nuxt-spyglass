@@ -1,6 +1,6 @@
 {
   "name": "nuxt-spyglass",
-  "version": "1.0.0",
+  "version": "1.0.0-alpha.1",
   "description": "Captures browser and server logs in one place and exposes them to AI tools via MCP.",
   "repository": "Flo0806/nuxt-spyglass",
   "license": "MIT",
