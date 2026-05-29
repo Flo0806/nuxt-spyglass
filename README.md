@@ -98,7 +98,9 @@ Spyglass ships `nuxt-spyglass-mcp`, a lightweight **stdio MCP server** that read
 - Keep your **Nuxt dev server running** (it produces the logs); the MCP server only reads the file on demand.
 - After registering the server, **start a new agent session** so the tools load.
 
-The server takes the path to your log file as its only argument, e.g. `/abs/path/to/your-app/.data/spyglass/logs.ndjson`. Use an absolute path.
+The server takes the path to your log file as its only argument (use an absolute path). `nuxt-spyglass-mcp` is a binary **inside** the `nuxt-spyglass` package, so launch it with `npx -p nuxt-spyglass nuxt-spyglass-mcp …` (or `node …/node_modules/nuxt-spyglass/dist/mcp.mjs …`).
+
+> 💡 Easiest: when the module starts in dev it **logs the exact, fully-resolved command** — just copy that.
 
 **Tools**
 
@@ -116,7 +118,7 @@ Framework noise (Vue warnings, devtools, build lifecycle) is excluded by default
 
 ```bash
 claude mcp add --transport stdio spyglass -- \
-  npx nuxt-spyglass-mcp /abs/path/to/your-app/.data/spyglass/logs.ndjson
+  npx -p nuxt-spyglass nuxt-spyglass-mcp /abs/path/to/your-app/.data/spyglass/logs.ndjson
 ```
 
 Then run `/mcp` in a new session to confirm `spyglass` is connected.
@@ -128,7 +130,7 @@ In `~/.codex/config.toml`:
 ```toml
 [mcp_servers.spyglass]
 command = "npx"
-args = ["nuxt-spyglass-mcp", "/abs/path/to/your-app/.data/spyglass/logs.ndjson"]
+args = ["-p", "nuxt-spyglass", "nuxt-spyglass-mcp", "/abs/path/to/your-app/.data/spyglass/logs.ndjson"]
 ```
 
 ### GitHub Copilot (VS Code)
@@ -141,7 +143,7 @@ In `.vscode/mcp.json`:
     "spyglass": {
       "type": "stdio",
       "command": "npx",
-      "args": ["nuxt-spyglass-mcp", "/abs/path/to/your-app/.data/spyglass/logs.ndjson"]
+      "args": ["-p", "nuxt-spyglass", "nuxt-spyglass-mcp", "/abs/path/to/your-app/.data/spyglass/logs.ndjson"]
     }
   }
 }

@@ -58,11 +58,13 @@ export default defineNuxtModule<ModuleOptions>({
       handler: resolver.resolve('./runtime/server/ingest.post'),
     })
 
-    // Confirm it's active, where logs go, and how to view them - the human CLI
-    // viewer and the (per-agent) MCP setup are both documented in the README.
+    // Print ready-to-run, fully-resolved commands so neither the developer nor
+    // an AI agent has to guess install paths (works in monorepos too).
     const logger = useLogger('spyglass')
+    const cliBin = resolver.resolve('./cli.mjs')
+    const mcpBin = resolver.resolve('./mcp.mjs')
     logger.info(`active - logging to ${logFile}`)
-    logger.info(`live log viewer: npx nuxt-spyglass ${logFile}`)
-    logger.info('AI access via MCP - see the README')
+    logger.info(`live log viewer:  node ${cliBin} ${logFile}`)
+    logger.info(`MCP server for AI agents (e.g. claude mcp add spyglass -- ...):  node ${mcpBin} ${logFile}`)
   },
 })
