@@ -1,5 +1,5 @@
 import { isAbsolute, resolve } from 'node:path'
-import { defineNuxtModule, addPlugin, addImportsDir, addServerPlugin, createResolver } from '@nuxt/kit'
+import { defineNuxtModule, addPlugin, addImportsDir, addServerPlugin, addServerHandler, createResolver } from '@nuxt/kit'
 
 export interface ModuleOptions {
   /**
@@ -42,5 +42,10 @@ export default defineNuxtModule<ModuleOptions>({
     addImportsDir(resolver.resolve('./runtime/composables'))
     addPlugin({ src: resolver.resolve('./runtime/plugin'), mode: 'client' })
     addServerPlugin(resolver.resolve('./runtime/server/plugin'))
+    addServerHandler({
+      route: '/_spyglass/ingest',
+      method: 'post',
+      handler: resolver.resolve('./runtime/server/ingest.post'),
+    })
   },
 })

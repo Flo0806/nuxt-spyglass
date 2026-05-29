@@ -2,12 +2,14 @@ import { defineNitroPlugin, useRuntimeConfig } from 'nitropack/runtime'
 import { consola } from 'consola'
 import { createNdjsonStore } from '../utils/ndjson-store'
 import { createReporter } from './reporter'
+import type { SpyglassNitroApp } from './shared'
 
 /**
- * Registers Spyglass' consola reporter and routes plain `console.*` calls
- * through consola, so server logs land in the NDJSON store.
+ * Registers Spyglass' consola reporter, routes plain `console.*` calls through
+ * consola, and exposes the shared store so the browser-ingest handler writes
+ * to the same file and write-queue.
  */
-export default defineNitroPlugin(() => {
+export default defineNitroPlugin((nitroApp) => {
   const config = useRuntimeConfig() as unknown as { spyglass?: { logFile: string } }
   const logFile = config.spyglass?.logFile
 
@@ -18,4 +20,6 @@ export default defineNitroPlugin(() => {
   const store = createNdjsonStore(logFile)
   consola.addReporter(createReporter(store))
   consola.wrapConsole()
+
+  ;(nitroApp as SpyglassNitroApp).spyglassStore = store
 })
