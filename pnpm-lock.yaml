@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@jano-editor/ui':
-        specifier: 1.0.0-alpha.6
-        version: 1.0.0-alpha.6
+        specifier: 1.0.0-alpha.7
+        version: 1.0.0-alpha.7
       '@modelcontextprotocol/sdk':
         specifier: ^1.29.0
         version: 1.29.0(zod@4.4.3)
@@ -832,8 +832,8 @@ packages:
     resolution: {integrity: sha512-wgm9Ehl2jpeqP3zw/7mo3kRHFp5MEDhqAdwy1fTGkHAwnkGOVsgpvQhL8B5n1qlb01jV3n/bI0ZfZp5lWA1k4w==}
     engines: {node: '>=18.0.0'}
 
-  '@jano-editor/ui@1.0.0-alpha.6':
-    resolution: {integrity: sha512-/k674xSgFuEbcD7t0sli9xttUdItTxty1QOpAowlnZxwmW/mObM/XRXR/rCIW4ZQRMHLZJ/fCIiSreRIid1C6g==}
+  '@jano-editor/ui@1.0.0-alpha.7':
+    resolution: {integrity: sha512-HDxJhofrGVS9q/WrlYK1T8ySwYCIB6MabhfwscwUbA17NVMwSTlE8XmHjWePcSis6JvOsLeJ95hS4lw7mCC8kA==}
 
   '@jridgewell/gen-mapping@0.3.13':
     resolution: {integrity: sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA==}
@@ -5697,7 +5697,7 @@ snapshots:
     dependencies:
       minipass: 7.1.3
 
-  '@jano-editor/ui@1.0.0-alpha.6': {}
+  '@jano-editor/ui@1.0.0-alpha.7': {}
 
   '@jridgewell/gen-mapping@0.3.13':
     dependencies:

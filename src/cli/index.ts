@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { resolve } from 'node:path'
 import { existsSync, statSync } from 'node:fs'
-import { createScreen, createDraw, createInputManager } from '@jano-editor/ui'
+import { createScreen, createDraw, createInputManager, showSearch } from '@jano-editor/ui'
 import type { KeyEvent } from '@jano-editor/ui'
 import type { LogEntry, LogLevel } from '../runtime/types'
 import { readEntries } from '../mcp/queries'
@@ -19,6 +19,7 @@ const TIME: RGB = [110, 115, 125]
 const MSG: RGB = [205, 210, 220]
 const NOISE: RGB = [95, 100, 110]
 const FOOT: RGB = [120, 125, 140]
+const SEL_BG: RGB = [40, 60, 95]
 const LEVEL_FG: Record<LogLevel, RGB> = {
   error: [255, 95, 95],
   warn: [235, 185, 80],
@@ -39,6 +40,9 @@ let entries: LogEntry[] = []
 let scrollTop = 0
 let follow = true
 let lastSig = ''
+let searchOpen = false
+let selectedLine: number | null = null
+let blinkOn = true
 
 const listHeight = (): number => Math.max(1, screen.height - 2)
 
@@ -71,26 +75,32 @@ function render(): void {
   draw.text(0, 0, pad(` 🔭 nuxt-spyglass  ·  ${total} logs  ·  ${logFile}`, w), { fg: ACCENT })
 
   for (let i = 0; i < lh; i++) {
-    const entry = entries[scrollTop + i]
+    const idx = scrollTop + i
+    const entry = entries[idx]
     if (!entry) {
       continue
     }
     const y = 1 + i
     const dim = !!entry.noise
+    const highlighted = idx === selectedLine && blinkOn
+    const bg = highlighted ? SEL_BG : undefined
+    if (highlighted) {
+      draw.text(0, y, ' '.repeat(w), { bg: SEL_BG })
+    }
     let x = 0
-    draw.text(x, y, timeOf(entry.timestamp), { fg: dim ? NOISE : TIME })
+    draw.text(x, y, timeOf(entry.timestamp), { fg: dim ? NOISE : TIME, bg })
     x += 9
-    draw.text(x, y, pad(entry.level.toUpperCase(), 5), { fg: dim ? NOISE : (LEVEL_FG[entry.level] ?? MSG) })
+    draw.text(x, y, pad(entry.level.toUpperCase(), 5), { fg: dim ? NOISE : (LEVEL_FG[entry.level] ?? MSG), bg })
     x += 6
-    draw.text(x, y, pad(entry.source, 7), { fg: dim ? NOISE : (SOURCE_FG[entry.source] ?? MSG) })
+    draw.text(x, y, pad(entry.source, 7), { fg: dim ? NOISE : (SOURCE_FG[entry.source] ?? MSG), bg })
     x += 8
     const message = (entry.message ?? '').replace(/\s+/g, ' ')
-    draw.text(x, y, message.slice(0, Math.max(0, w - x)), { fg: dim ? NOISE : MSG })
+    draw.text(x, y, message.slice(0, Math.max(0, w - x)), { fg: dim ? NOISE : MSG, bg })
   }
 
   const footer = follow
-    ? ' q quit   ↑/↓ scroll   ·   following (newest at bottom)'
-    : ` q quit   ↑/↓ scroll   End: jump to newest   ·   ${scrollTop + 1}-${Math.min(scrollTop + lh, total)} / ${total}`
+    ? ' q quit   ↑/↓ scroll   / search   ·   following (newest at bottom)'
+    : ` q quit   ↑/↓ scroll   / search   End: newest   ·   ${scrollTop + 1}-${Math.min(scrollTop + lh, total)} / ${total}`
   draw.text(0, screen.height - 1, pad(footer, w), { fg: FOOT })
 
   draw.flush()
@@ -98,6 +108,41 @@ function render(): void {
 
 function reload(): void {
   entries = readEntries(logFile)
+}
+
+/** Briefly blink a row to draw the eye, then leave it highlighted. */
+function flashLine(line: number): void {
+  selectedLine = line
+  follow = false
+  const maxTop = Math.max(0, entries.length - listHeight())
+  scrollTop = Math.max(0, Math.min(line - Math.floor(listHeight() / 2), maxTop))
+  blinkOn = true
+  let toggles = 0
+  const timer = setInterval(() => {
+    blinkOn = !blinkOn
+    render()
+    if (++toggles >= 6) {
+      clearInterval(timer)
+      selectedLine = null
+      render()
+    }
+  }, 200)
+}
+
+/** Open the library's search overlay over the current logs and jump to a hit. */
+async function openSearch(): Promise<void> {
+  searchOpen = true
+  const lines = entries.map(e => `${timeOf(e.timestamp)} ${e.level} ${e.source} ${(e.message ?? '').replace(/\s+/g, ' ')}`)
+  try {
+    const result = await showSearch(input, screen, draw, lines, { searchOnly: true }, render)
+    if (result.type === 'jump') {
+      flashLine(result.match.line)
+    }
+  }
+  finally {
+    searchOpen = false
+    render()
+  }
 }
 
 function quit(): void {
@@ -149,6 +194,9 @@ layer.on('key', (key: KeyEvent) => {
     follow = true
     render()
   }
+  else if (key.name === '/' || (key.ctrl && key.name === 'f')) {
+    void openSearch()
+  }
   return true
 })
 layer.on('mouse:scroll', (event) => {
@@ -158,6 +206,9 @@ layer.on('mouse:scroll', (event) => {
 layer.on('resize', () => render())
 
 setInterval(() => {
+  if (searchOpen) {
+    return
+  }
   const sig = fileSignature()
   if (sig !== lastSig) {
     lastSig = sig
