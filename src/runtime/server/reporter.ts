@@ -26,12 +26,17 @@ export function createReporter(store: NdjsonStore): ConsolaReporter {
   return {
     log(logObj) {
       const args = logObj.args ?? []
+      const message = formatArgs(args)
+      // The Nitro `error` hook captures these cleanly (with ids + stack); skip the duplicate.
+      if (message.startsWith('[request error]')) {
+        return
+      }
       const { requestId, pageLoadId } = currentIds()
       store.append({
         timestamp: logObj.date instanceof Date ? logObj.date.getTime() : Date.now(),
         level: toLogLevel(logObj.type),
         source: 'server',
-        message: formatArgs(args),
+        message,
         stack: extractStack(args),
         requestId,
         pageLoadId,

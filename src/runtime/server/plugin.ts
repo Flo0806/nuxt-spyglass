@@ -47,4 +47,20 @@ export default defineNitroPlugin((nitroApp) => {
       html.head.push(`<meta name="spyglass-page" content="${pageLoadId}">`)
     }
   })
+
+  // Capture unhandled errors here, where the event (and its ids) are available
+  // and the original Error object yields a clean stack. consola logs the same
+  // error outside the request context, so the reporter skips that duplicate.
+  nitroApp.hooks.hook('error', (error, { event }) => {
+    store.append({
+      timestamp: Date.now(),
+      level: 'error',
+      source: 'server',
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      requestId: event?.context.spyglassRequestId as string | undefined,
+      pageLoadId: event?.context.spyglassPageLoadId as string | undefined,
+      route: event?.path,
+    })
+  })
 })
