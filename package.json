@@ -1,8 +1,8 @@
 {
   "name": "nuxt-spyglass",
   "version": "1.0.0",
-  "description": "My new Nuxt module",
-  "repository": "your-org/my-module",
+  "description": "Captures browser and server logs in one place and exposes them to AI tools via MCP.",
+  "repository": "Flo0806/nuxt-spyglass",
   "license": "MIT",
   "type": "module",
   "exports": {
@@ -21,9 +21,6 @@
   },
   "files": [
     "dist"
-  ],
-  "workspaces": [
-    "playground"
   ],
   "scripts": {
     "prepack": "nuxt-module-build build",

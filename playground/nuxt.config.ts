@@ -1,6 +1,6 @@
 export default defineNuxtConfig({
-  modules: ['my-module'],
+  modules: ['nuxt-spyglass'],
   devtools: { enabled: true },
   compatibilityDate: 'latest',
-  myModule: {},
+  spyglass: {},
 })

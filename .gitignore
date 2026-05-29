@@ -45,6 +45,9 @@ coverage
 *.iml
 .idea
 
+# Local / private (not shared yet)
+CLAUDE.md
+
 # OSX
 .DS_Store
 .AppleDouble

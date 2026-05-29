@@ -1,7 +1,7 @@
-import MyModule from '../../../src/module'
+import Spyglass from '../../../src/module'
 
 export default defineNuxtConfig({
   modules: [
-    MyModule,
+    Spyglass,
   ],
 })
