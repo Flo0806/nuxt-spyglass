@@ -14,6 +14,7 @@ function toEntry(raw: Partial<LogEntry>): LogEntry {
     message: typeof raw.message === 'string' ? raw.message : '',
     stack: typeof raw.stack === 'string' ? raw.stack : undefined,
     route: typeof raw.route === 'string' ? raw.route : undefined,
+    pageLoadId: typeof raw.pageLoadId === 'string' ? raw.pageLoadId : undefined,
   }
 }
 

@@ -23,8 +23,10 @@ export interface LogEntry {
   args?: unknown[]
   /** Stack trace, present on errors. */
   stack?: string
-  /** Correlates browser and server entries of the same request/navigation. */
+  /** Identifies a single server request; the finest correlation unit. */
   requestId?: string
+  /** Groups everything of one page load (browser logs + the requests it made). */
+  pageLoadId?: string
   /** Route path the entry originated from. */
   route?: string
 }
