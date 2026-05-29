@@ -1,5 +1,5 @@
 import { isAbsolute, resolve } from 'node:path'
-import { defineNuxtModule, addPlugin, addImportsDir, addServerPlugin, addServerHandler, createResolver } from '@nuxt/kit'
+import { defineNuxtModule, addPlugin, addImportsDir, addServerPlugin, addServerHandler, createResolver, useLogger } from '@nuxt/kit'
 
 export interface ModuleOptions {
   /**
@@ -52,5 +52,10 @@ export default defineNuxtModule<ModuleOptions>({
       method: 'post',
       handler: resolver.resolve('./runtime/server/ingest.post'),
     })
+
+    // Confirm it's active and where logs go; the (per-agent) MCP setup is in the README.
+    const logger = useLogger('spyglass')
+    logger.info(`active — logging to ${logFile}`)
+    logger.info('to let an AI read these logs, set up the MCP server (see the README)')
   },
 })
