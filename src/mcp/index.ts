@@ -69,7 +69,7 @@ server.registerTool('search', {
 // previous call in this session. The cursor lives for the process lifetime.
 let sinceCursor: SinceCursor | null = null
 server.registerTool('logs_since_last_check', {
-  description: 'Logs that arrived since your previous call to this tool (this session). The first call returns the recent tail as a baseline. Use it to see what changed after an action — e.g. after editing code, call it to check which new errors appeared. Framework noise excluded by default.',
+  description: 'Logs that arrived since your previous call to this tool (this session). The first call returns the recent tail as a baseline. Use it to see what changed after an action - e.g. after editing code, call it to check which new errors appeared. Framework noise excluded by default.',
   inputSchema: { includeNoise: INCLUDE_NOISE },
 }, ({ includeNoise }) => {
   const { fresh, cursor } = logsSince(readEntries(logFile), sinceCursor)
