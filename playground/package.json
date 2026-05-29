@@ -8,7 +8,7 @@
     "generate": "nuxt generate"
   },
   "dependencies": {
-    "nuxt-spyglass": "latest",
+    "nuxt-spyglass": "workspace:*",
     "nuxt": "^4.4.6"
   }
 }
