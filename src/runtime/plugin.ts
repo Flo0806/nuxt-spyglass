@@ -1,4 +1,5 @@
 import { defineNuxtPlugin, useRuntimeConfig } from '#imports'
+import type { ObjectPlugin } from '#app'
 import type { LogEntry, LogLevel } from './types'
 import { formatArgs, extractStack } from './utils/normalize'
 
@@ -29,7 +30,7 @@ function isSameOrigin(request: unknown): boolean {
  * page load id, and ships batches to the Nitro ingest endpoint. Also stamps
  * outgoing same-origin `$fetch` requests so the server can correlate them.
  */
-export default defineNuxtPlugin(() => {
+const plugin: ObjectPlugin = defineNuxtPlugin(() => {
   const config = useRuntimeConfig().public.spyglass as { enabled: boolean } | undefined
   if (!config?.enabled) {
     return
@@ -106,3 +107,5 @@ export default defineNuxtPlugin(() => {
     navigator.sendBeacon(INGEST_URL, new Blob([JSON.stringify(batch)], { type: 'application/json' }))
   })
 })
+
+export default plugin
