@@ -13,6 +13,7 @@
   },
   "main": "./dist/module.mjs",
   "bin": {
+    "nuxt-spyglass": "./dist/cli.mjs",
     "nuxt-spyglass-mcp": "./dist/mcp.mjs"
   },
   "typesVersions": {
@@ -37,6 +38,7 @@
     "test:types": "vue-tsc --noEmit && cd playground && vue-tsc --noEmit"
   },
   "dependencies": {
+    "@jano-editor/ui": "1.0.0-alpha.6",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@nuxt/kit": "^4.4.6",
     "consola": "^3.4.2",
