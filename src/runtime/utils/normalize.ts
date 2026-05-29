@@ -1,4 +1,17 @@
-import type { LogLevel } from '../types'
+import type { LogLevel, LogSource } from '../types'
+
+// Framework/ambient noise markers. Experimental - deliberately small and
+// conservative; tune against real projects. Misclassification only hides an
+// entry from default queries (it's still stored and retrievable), never drops it.
+const NOISE_PATTERNS: Record<LogSource, string[]> = {
+  browser: ['[Vue warn]', 'Nuxt DevTools', 'is an experimental feature'],
+  server: ['Vite server', 'Vite client', 'warmed up', 'Nuxt Nitro server built'],
+}
+
+/** Heuristic classification of framework/ambient noise. Experimental. */
+export function isNoise(message: string, source: LogSource): boolean {
+  return NOISE_PATTERNS[source].some(pattern => message.includes(pattern))
+}
 
 const LEVEL_BY_TYPE: Record<string, LogLevel> = {
   fatal: 'error',

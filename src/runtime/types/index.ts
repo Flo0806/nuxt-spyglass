@@ -29,4 +29,6 @@ export interface LogEntry {
   pageLoadId?: string
   /** Route path the entry originated from. */
   route?: string
+  /** Framework/ambient noise (Vue warnings, devtools, build lifecycle); hidden from queries unless asked. */
+  noise?: boolean
 }

@@ -34,31 +34,37 @@ export interface RecentOptions {
   source?: LogSource
   /** Only entries at or after this Unix epoch (ms). */
   since?: number
+  /** Include framework/ambient noise (Vue warnings, devtools, build lifecycle). Default false. */
+  includeNoise?: boolean
 }
 
-/** Most recent entries (chronological), with optional filters. */
+/** Most recent entries (chronological), with optional filters. Hides noise unless asked. */
 export function recentLogs(entries: LogEntry[], options: RecentOptions = {}): LogEntry[] {
-  const { limit = 50, level, source, since } = options
+  const { limit = 50, level, source, since, includeNoise = false } = options
   const filtered = entries.filter(e =>
     (level === undefined || e.level === level)
     && (source === undefined || e.source === source)
-    && (since === undefined || e.timestamp >= since),
+    && (since === undefined || e.timestamp >= since)
+    && (includeNoise || !e.noise),
   )
   return filtered.sort(byTime).slice(-limit)
 }
 
 /** The most recent errors from both browser and server. */
-export function recentErrors(entries: LogEntry[], limit = 50): LogEntry[] {
-  return recentLogs(entries, { limit, level: 'error' })
+export function recentErrors(entries: LogEntry[], limit = 50, includeNoise = false): LogEntry[] {
+  return recentLogs(entries, { limit, level: 'error', includeNoise })
 }
 
-/** Every entry of one page load (browser + server), chronological - the full tree. */
+/** Every entry of one page load (browser + server), chronological - the full tree (noise included). */
 export function logsForPage(entries: LogEntry[], pageLoadId: string): LogEntry[] {
   return entries.filter(e => e.pageLoadId === pageLoadId).sort(byTime)
 }
 
-/** Case-insensitive substring search across messages. */
-export function search(entries: LogEntry[], query: string, limit = 50): LogEntry[] {
+/** Case-insensitive substring search across messages. Hides noise unless asked. */
+export function search(entries: LogEntry[], query: string, limit = 50, includeNoise = false): LogEntry[] {
   const needle = query.toLowerCase()
-  return entries.filter(e => e.message.toLowerCase().includes(needle)).sort(byTime).slice(-limit)
+  return entries
+    .filter(e => e.message.toLowerCase().includes(needle) && (includeNoise || !e.noise))
+    .sort(byTime)
+    .slice(-limit)
 }

@@ -1,7 +1,7 @@
 import { useEvent } from 'nitropack/runtime'
 import type { ConsolaReporter } from 'consola'
 import type { NdjsonStore } from '../utils/ndjson-store'
-import { toLogLevel, formatArgs, extractStack } from '../utils/normalize'
+import { toLogLevel, formatArgs, extractStack, isNoise } from '../utils/normalize'
 
 /** Read the current request's correlation ids from Nitro's async context, if any. */
 function currentIds(): { requestId?: string, pageLoadId?: string } {
@@ -40,6 +40,7 @@ export function createReporter(store: NdjsonStore): ConsolaReporter {
         stack: extractStack(args),
         requestId,
         pageLoadId,
+        noise: isNoise(message, 'server') || undefined,
       })
     },
   }

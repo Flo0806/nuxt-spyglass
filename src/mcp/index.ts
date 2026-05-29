@@ -32,32 +32,36 @@ function render(entries: LogEntry[]): { content: { type: 'text', text: string }[
 }
 
 const LIMIT = z.number().int().positive().max(500).optional()
+const INCLUDE_NOISE = z.boolean().optional().describe(
+  'Include framework/ambient noise (Vue warnings, devtools, build lifecycle). Default: excluded. Set true to see everything, e.g. to reason about timing/ordering.',
+)
 
 const server = new McpServer({ name: 'nuxt-spyglass', version: '1.0.0' })
 
 server.registerTool('recent_errors', {
-  description: 'Most recent error logs from both browser and server.',
-  inputSchema: { limit: LIMIT },
-}, ({ limit }) => render(recentErrors(readEntries(logFile), limit ?? 50)))
+  description: 'Most recent error logs from both browser and server. Framework noise is excluded by default; set includeNoise to see everything.',
+  inputSchema: { limit: LIMIT, includeNoise: INCLUDE_NOISE },
+}, ({ limit, includeNoise }) => render(recentErrors(readEntries(logFile), limit ?? 50, includeNoise)))
 
 server.registerTool('recent_logs', {
-  description: 'Most recent logs, with optional filters by level, source and start time.',
+  description: 'Most recent logs, with optional filters by level, source and start time. Framework noise is excluded by default; set includeNoise to see everything.',
   inputSchema: {
     limit: LIMIT,
     level: z.enum(['debug', 'info', 'log', 'warn', 'error']).optional(),
     source: z.enum(['browser', 'server']).optional(),
     since: z.number().int().optional().describe('Unix epoch in ms; only entries at or after this time'),
+    includeNoise: INCLUDE_NOISE,
   },
-}, ({ limit, level, source, since }) => render(recentLogs(readEntries(logFile), { limit, level, source, since })))
+}, ({ limit, level, source, since, includeNoise }) => render(recentLogs(readEntries(logFile), { limit, level, source, since, includeNoise })))
 
 server.registerTool('logs_for_page', {
-  description: 'Every log of one page load (browser + server) by pageLoadId - the full correlated tree.',
+  description: 'Every log of one page load (browser + server) by pageLoadId - the full correlated tree, including framework noise.',
   inputSchema: { pageLoadId: z.string() },
 }, ({ pageLoadId }) => render(logsForPage(readEntries(logFile), pageLoadId)))
 
 server.registerTool('search', {
-  description: 'Case-insensitive substring search across log messages.',
-  inputSchema: { query: z.string(), limit: LIMIT },
-}, ({ query, limit }) => render(search(readEntries(logFile), query, limit ?? 50)))
+  description: 'Case-insensitive substring search across log messages. Framework noise is excluded by default; set includeNoise to see everything.',
+  inputSchema: { query: z.string(), limit: LIMIT, includeNoise: INCLUDE_NOISE },
+}, ({ query, limit, includeNoise }) => render(search(readEntries(logFile), query, limit ?? 50, includeNoise)))
 
 await server.connect(new StdioServerTransport())
