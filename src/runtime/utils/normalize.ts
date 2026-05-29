@@ -38,15 +38,24 @@ function safeStringify(value: unknown): string {
   }
 }
 
+// eslint-disable-next-line no-control-regex
+const ANSI_PATTERN = /\u001B\[[0-9;]*m/g
+
+/** Strip ANSI colour codes; consola/Nitro pre-format errors with them. */
+function stripAnsi(value: string): string {
+  return value.replace(ANSI_PATTERN, '')
+}
+
 /** Render arbitrary log arguments into a single human-readable line. */
 export function formatArgs(args: unknown[]): string {
-  return args
+  const text = args
     .map((arg) => {
       if (typeof arg === 'string') return arg
       if (arg instanceof Error) return arg.message
       return safeStringify(arg)
     })
     .join(' ')
+  return stripAnsi(text)
 }
 
 /** Pull the stack trace from the first Error among the arguments, if any. */
