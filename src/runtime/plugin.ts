@@ -11,7 +11,7 @@ function resolvePageLoadId(): string {
   return injected || crypto.randomUUID()
 }
 
-/** True for same-origin requests only — never leak the correlation header to third parties. */
+/** True for same-origin requests only - never leak the correlation header to third parties. */
 function isSameOrigin(request: unknown): boolean {
   try {
     const url = request instanceof Request

@@ -13,7 +13,7 @@ function currentIds(): { requestId?: string, pageLoadId?: string } {
     }
   }
   catch {
-    // Logged outside a request (startup, background task) — no ids.
+    // Logged outside a request (startup, background task) - no ids.
     return {}
   }
 }
