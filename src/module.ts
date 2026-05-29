@@ -31,6 +31,11 @@ export default defineNuxtModule<ModuleOptions>({
 
     const resolver = createResolver(import.meta.url)
 
+    // Request-scoped server logging needs Nitro's async context (useEvent).
+    nuxt.options.nitro ||= {}
+    nuxt.options.nitro.experimental ||= {}
+    nuxt.options.nitro.experimental.asyncContext = true
+
     // Resolve to an absolute path; relative paths sit under the project root.
     const relative = options.logFile ?? '.data/spyglass/logs.ndjson'
     const logFile = isAbsolute(relative) ? relative : resolve(nuxt.options.rootDir, relative)

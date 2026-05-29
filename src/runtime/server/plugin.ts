@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import { defineNitroPlugin, useRuntimeConfig } from 'nitropack/runtime'
 import { consola } from 'consola'
 import { createNdjsonStore } from '../utils/ndjson-store'
@@ -22,4 +23,9 @@ export default defineNitroPlugin((nitroApp) => {
   consola.wrapConsole()
 
   ;(nitroApp as SpyglassNitroApp).spyglassStore = store
+
+  // Tag every request so logs emitted during it can be correlated.
+  nitroApp.hooks.hook('request', (event) => {
+    event.context.spyglassRequestId = randomUUID()
+  })
 })

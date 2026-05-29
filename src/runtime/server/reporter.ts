@@ -1,6 +1,18 @@
+import { useEvent } from 'nitropack/runtime'
 import type { ConsolaReporter } from 'consola'
 import type { NdjsonStore } from '../utils/ndjson-store'
 import { toLogLevel, formatArgs, extractStack } from '../utils/normalize'
+
+/** Read the current request's id from Nitro's async context, if any. */
+function currentRequestId(): string | undefined {
+  try {
+    return useEvent().context.spyglassRequestId as string | undefined
+  }
+  catch {
+    // Logged outside a request (startup, background task) — no id.
+    return undefined
+  }
+}
 
 /**
  * consola reporter that normalises every server-side log into a `LogEntry`
@@ -16,6 +28,7 @@ export function createReporter(store: NdjsonStore): ConsolaReporter {
         source: 'server',
         message: formatArgs(args),
         stack: extractStack(args),
+        requestId: currentRequestId(),
       })
     },
   }
