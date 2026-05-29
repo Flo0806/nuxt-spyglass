@@ -3,7 +3,8 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod'
 import type { LogEntry } from '../runtime/types'
-import { readEntries, recentLogs, recentErrors, logsForPage, search } from './queries'
+import { readEntries, recentLogs, recentErrors, logsForPage, search, logsSince } from './queries'
+import type { SinceCursor } from './queries'
 
 const logFile = process.argv[2] ?? process.env.SPYGLASS_LOG_FILE
 if (!logFile) {
@@ -63,5 +64,17 @@ server.registerTool('search', {
   description: 'Case-insensitive substring search across log messages. Framework noise is excluded by default; set includeNoise to see everything.',
   inputSchema: { query: z.string(), limit: LIMIT, includeNoise: INCLUDE_NOISE },
 }, ({ query, limit, includeNoise }) => render(search(readEntries(logFile), query, limit ?? 50, includeNoise)))
+
+// Stateful, non-blocking "notify": each call returns only what arrived since the
+// previous call in this session. The cursor lives for the process lifetime.
+let sinceCursor: SinceCursor | null = null
+server.registerTool('logs_since_last_check', {
+  description: 'Logs that arrived since your previous call to this tool (this session). The first call returns the recent tail as a baseline. Use it to see what changed after an action — e.g. after editing code, call it to check which new errors appeared. Framework noise excluded by default.',
+  inputSchema: { includeNoise: INCLUDE_NOISE },
+}, ({ includeNoise }) => {
+  const { fresh, cursor } = logsSince(readEntries(logFile), sinceCursor)
+  sinceCursor = cursor
+  return render(includeNoise ? fresh : fresh.filter(e => !e.noise))
+})
 
 await server.connect(new StdioServerTransport())

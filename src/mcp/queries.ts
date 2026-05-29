@@ -68,3 +68,63 @@ export function search(entries: LogEntry[], query: string, limit = 50, includeNo
     .sort(byTime)
     .slice(-limit)
 }
+
+/** Position marker for incremental reads: a timestamp plus how many entries at that exact ms were already consumed. */
+export interface SinceCursor {
+  ts: number
+  tsCount: number
+}
+
+export interface SinceResult {
+  fresh: LogEntry[]
+  cursor: SinceCursor | null
+}
+
+function makeCursor(sorted: LogEntry[]): SinceCursor | null {
+  const last = sorted[sorted.length - 1]
+  if (!last) {
+    return null
+  }
+  const ts = last.timestamp
+  let tsCount = 0
+  for (let i = sorted.length - 1; i >= 0; i--) {
+    if (sorted[i]?.timestamp !== ts) {
+      break
+    }
+    tsCount++
+  }
+  return { ts, tsCount }
+}
+
+/**
+ * Entries that arrived since `cursor`. On the first call (cursor null) returns
+ * the recent tail as a baseline. Tie-safe (handles multiple entries at the same
+ * ms) and rotation-safe (dropped older entries are simply never re-reported).
+ */
+export function logsSince(entries: LogEntry[], cursor: SinceCursor | null, baselineLimit = 50): SinceResult {
+  const sorted = [...entries].sort(byTime)
+  if (cursor === null) {
+    return { fresh: sorted.slice(-baselineLimit), cursor: makeCursor(sorted) }
+  }
+  let startIdx = sorted.length
+  let consumedAtTs = 0
+  for (let i = 0; i < sorted.length; i++) {
+    const ts = sorted[i]?.timestamp
+    if (ts === undefined) {
+      continue
+    }
+    if (ts > cursor.ts) {
+      startIdx = i
+      break
+    }
+    if (ts === cursor.ts) {
+      if (consumedAtTs < cursor.tsCount) {
+        consumedAtTs++
+        continue
+      }
+      startIdx = i
+      break
+    }
+  }
+  return { fresh: sorted.slice(startIdx), cursor: makeCursor(sorted) }
+}
