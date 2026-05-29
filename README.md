@@ -27,6 +27,7 @@ To put those logs into your AI's hands, Spyglass ships a lightweight **stdio MCP
 - 🔗 **Correlation** across the boundary via `pageLoadId` (per page load) and `requestId` (per request)
 - 💥 Captures `console.*`, uncaught errors, unhandled rejections and server throws - **with real stack traces**
 - 🤖 Built-in **stdio MCP server** so AI agents can query your logs
+- 👀 Built-in **terminal log viewer** (`npx nuxt-spyglass`) for humans - live tail, colors, search
 - 🚫 **Dev-only** - a no-op in production, zero cost in your build
 
 ## Quick Setup
@@ -71,6 +72,22 @@ export default defineNuxtConfig({
 - Everything lands in one **NDJSON** file through a single write queue.
 - **Correlation:** each page load carries a `pageLoadId` (injected during SSR, sent back to the server on same-origin requests); each server request gets its own `requestId`. Browser and server entries of the same page load therefore share one id.
 
+## 👀 Live log viewer (CLI)
+
+A built-in terminal viewer for **you** (the human) - run it in a second terminal next to your dev server:
+
+```bash
+npx nuxt-spyglass                  # uses .data/spyglass/logs.ndjson in the current folder
+npx nuxt-spyglass <path-to-logs>   # or point it at the file explicitly
+```
+
+When the module starts in dev it also prints the exact command (with the resolved path), so you can just copy-paste it.
+
+- Live tail, newest at the bottom, auto-follows; scroll with `↑/↓`, `PageUp/Down`, `Home/End`, or the mouse wheel
+- **Browser + server logs interleaved**, colored by level, framework noise dimmed
+- **`/`** to search - jump to a hit, which briefly highlights
+- **`q`** or `Ctrl+C` to quit
+
 ## 🔭 AI access (MCP)
 
 Spyglass ships `nuxt-spyglass-mcp`, a lightweight **stdio MCP server** that reads your log file and exposes it to AI agents.
@@ -91,6 +108,9 @@ The server takes the path to your log file as its only argument, e.g. `/abs/path
 | `recent_logs` | Recent logs, optionally filtered by level, source or start time |
 | `logs_for_page` | Every log of one page load by `pageLoadId` - the full correlated tree |
 | `search` | Case-insensitive substring search across messages |
+| `logs_since_last_check` | Only what arrived since the previous call - to see what changed after an action (e.g. after editing code) |
+
+Framework noise (Vue warnings, devtools, build lifecycle) is excluded by default; pass `includeNoise: true` to any tool to see everything.
 
 ### Claude Code
 

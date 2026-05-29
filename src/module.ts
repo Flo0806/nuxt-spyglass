@@ -58,9 +58,11 @@ export default defineNuxtModule<ModuleOptions>({
       handler: resolver.resolve('./runtime/server/ingest.post'),
     })
 
-    // Confirm it's active and where logs go; the (per-agent) MCP setup is in the README.
+    // Confirm it's active, where logs go, and how to view them - the human CLI
+    // viewer and the (per-agent) MCP setup are both documented in the README.
     const logger = useLogger('spyglass')
     logger.info(`active - logging to ${logFile}`)
-    logger.info('to let an AI read these logs, set up the MCP server (see the README)')
+    logger.info(`live log viewer: npx nuxt-spyglass ${logFile}`)
+    logger.info('AI access via MCP - see the README')
   },
 })
