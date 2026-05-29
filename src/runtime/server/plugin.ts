@@ -18,14 +18,14 @@ function isUuid(value: string | undefined): value is string {
  * consola, exposes the shared store, and tags each request for correlation.
  */
 export default defineNitroPlugin((nitroApp) => {
-  const config = useRuntimeConfig() as unknown as { spyglass?: { logFile: string } }
+  const config = useRuntimeConfig() as unknown as { spyglass?: { logFile: string, maxFileSize?: number } }
   const logFile = config.spyglass?.logFile
 
   if (!logFile) {
     return
   }
 
-  const store = createNdjsonStore(logFile)
+  const store = createNdjsonStore(logFile, { maxFileSize: config.spyglass?.maxFileSize })
   consola.addReporter(createReporter(store))
   consola.wrapConsole()
 

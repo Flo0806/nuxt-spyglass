@@ -1,12 +1,10 @@
 import { existsSync, readFileSync } from 'node:fs'
 import type { LogEntry, LogLevel, LogSource } from '../runtime/types'
 
-/** Read and parse the NDJSON store; malformed lines are skipped. */
-export function readEntries(file: string): LogEntry[] {
+function parseInto(file: string, entries: LogEntry[]): void {
   if (!existsSync(file)) {
-    return []
+    return
   }
-  const entries: LogEntry[] = []
   for (const line of readFileSync(file, 'utf8').split('\n')) {
     if (!line.trim()) {
       continue
@@ -18,6 +16,13 @@ export function readEntries(file: string): LogEntry[] {
       // Skip a torn/half-written line rather than failing the whole query.
     }
   }
+}
+
+/** Read both the rotated (`.1`, older) and active NDJSON files; malformed lines skipped. */
+export function readEntries(file: string): LogEntry[] {
+  const entries: LogEntry[] = []
+  parseInto(`${file}.1`, entries)
+  parseInto(file, entries)
   return entries
 }
 

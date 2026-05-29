@@ -9,6 +9,8 @@ export interface ModuleOptions {
   enabled?: boolean
   /** NDJSON log file. Relative paths are resolved against the project root. */
   logFile?: string
+  /** Rotate once the active log reaches this many bytes (keeps at most two files). */
+  maxFileSize?: number
 }
 
 export default defineNuxtModule<ModuleOptions>({
@@ -22,6 +24,7 @@ export default defineNuxtModule<ModuleOptions>({
   defaults: {
     enabled: true,
     logFile: '.data/spyglass/logs.ndjson',
+    maxFileSize: 5 * 1024 * 1024,
   },
   setup(options, nuxt) {
     // Dev-only tool: never ship capture into production builds.
@@ -41,8 +44,10 @@ export default defineNuxtModule<ModuleOptions>({
     const logFile = isAbsolute(relative) ? relative : resolve(nuxt.options.rootDir, relative)
 
     // Expose minimal state to the client; the log file path stays server-side.
-    nuxt.options.runtimeConfig.public.spyglass = { enabled: true }
-    nuxt.options.runtimeConfig.spyglass = { logFile }
+    // RuntimeConfig types are auto-generated and can lag while a dev server runs; cast our own keys.
+    const runtimeConfig = nuxt.options.runtimeConfig as unknown as { public: Record<string, unknown>, [key: string]: unknown }
+    runtimeConfig.public.spyglass = { enabled: true }
+    runtimeConfig.spyglass = { logFile, maxFileSize: options.maxFileSize ?? 5 * 1024 * 1024 }
 
     addImportsDir(resolver.resolve('./runtime/composables'))
     addPlugin({ src: resolver.resolve('./runtime/plugin'), mode: 'client' })
@@ -55,7 +60,7 @@ export default defineNuxtModule<ModuleOptions>({
 
     // Confirm it's active and where logs go; the (per-agent) MCP setup is in the README.
     const logger = useLogger('spyglass')
-    logger.info(`active — logging to ${logFile}`)
+    logger.info(`active - logging to ${logFile}`)
     logger.info('to let an AI read these logs, set up the MCP server (see the README)')
   },
 })

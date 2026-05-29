@@ -51,7 +51,7 @@ server.registerTool('recent_logs', {
 }, ({ limit, level, source, since }) => render(recentLogs(readEntries(logFile), { limit, level, source, since })))
 
 server.registerTool('logs_for_page', {
-  description: 'Every log of one page load (browser + server) by pageLoadId — the full correlated tree.',
+  description: 'Every log of one page load (browser + server) by pageLoadId - the full correlated tree.',
   inputSchema: { pageLoadId: z.string() },
 }, ({ pageLoadId }) => render(logsForPage(readEntries(logFile), pageLoadId)))
 
