@@ -38,8 +38,19 @@ jobs:
       - name: Build (module + mcp + cli bins)
         run: pnpm prepack
 
+      - name: Resolve npm dist-tag
+        id: disttag
+        run: |
+          VER="${GITHUB_REF_NAME#v}"            # e.g. 1.0.0-alpha.1
+          if [[ "$VER" == *-* ]]; then
+            PRE="${VER#*-}"; PRE="${PRE%%.*}"    # alpha / beta / rc / next
+            echo "tag=$PRE" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=latest" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Publish to npm
-        run: pnpm publish --access public --no-git-checks
+        run: pnpm publish --access public --no-git-checks --tag ${{ steps.disttag.outputs.tag }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: true
