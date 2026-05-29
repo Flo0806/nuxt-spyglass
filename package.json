@@ -12,6 +12,9 @@
     }
   },
   "main": "./dist/module.mjs",
+  "bin": {
+    "nuxt-spyglass-mcp": "./dist/mcp.mjs"
+  },
   "typesVersions": {
     "*": {
       ".": [
@@ -34,8 +37,10 @@
     "test:types": "vue-tsc --noEmit && cd playground && vue-tsc --noEmit"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "@nuxt/kit": "^4.4.6",
-    "consola": "^3.4.2"
+    "consola": "^3.4.2",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@nuxt/devtools": "^3.2.4",
@@ -48,6 +53,7 @@
     "eslint": "^10.4.0",
     "nuxt": "^4.4.6",
     "typescript": "~6.0.3",
+    "unbuild": "^3.6.1",
     "vitest": "^4.1.7",
     "vue-tsc": "^3.3.1"
   }

@@ -69,16 +69,17 @@ export default defineNuxtPlugin(() => {
 
   // Wrap $fetch (delegating to the real one) so same-origin calls carry the page id.
   const realFetch = globalThis.$fetch
-  const wrapped = ((request: Parameters<typeof realFetch>[0], options: Parameters<typeof realFetch>[1] = {}) => {
-    if (isSameOrigin(request)) {
-      const headers = new Headers(options.headers as HeadersInit | undefined)
+  const call = realFetch as unknown as (input: RequestInfo | URL, init?: RequestInit) => Promise<unknown>
+  const wrapped = (input: RequestInfo | URL, init?: RequestInit): Promise<unknown> => {
+    if (isSameOrigin(input)) {
+      const headers = new Headers(init?.headers)
       headers.set('x-spyglass-page', pageLoadId)
-      options = { ...options, headers }
+      return call(input, { ...init, headers })
     }
-    return realFetch(request, options)
-  }) as typeof realFetch
+    return call(input, init)
+  }
   Object.assign(wrapped, realFetch)
-  globalThis.$fetch = wrapped
+  globalThis.$fetch = wrapped as unknown as typeof globalThis.$fetch
 
   const flush = (): void => {
     if (buffer.length === 0) {
