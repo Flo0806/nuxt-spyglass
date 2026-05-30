@@ -4,6 +4,17 @@
   "description": "Captures browser and server logs in one place and exposes them to AI tools via MCP.",
   "repository": "Flo0806/nuxt-spyglass",
   "license": "MIT",
+  "keywords": [
+    "nuxt",
+    "nuxt-module",
+    "nuxt4",
+    "logging",
+    "logs",
+    "devtools",
+    "debugging",
+    "mcp",
+    "ai"
+  ],
   "type": "module",
   "packageManager": "pnpm@10.33.0",
   "exports": {
