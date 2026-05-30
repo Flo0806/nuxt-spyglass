@@ -100,7 +100,7 @@ Spyglass ships `nuxt-spyglass-mcp`, a lightweight **stdio MCP server** that read
 
 The server takes the path to your log file as its only argument (use an absolute path). `nuxt-spyglass-mcp` is a binary **inside** the `nuxt-spyglass` package, so launch it with `npx -p nuxt-spyglass nuxt-spyglass-mcp …` (or `node …/node_modules/nuxt-spyglass/dist/mcp.mjs …`).
 
-> 💡 Easiest: when the module starts in dev it **logs the exact, fully-resolved command** — just copy that.
+> 💡 Easiest: when the module starts in dev it **logs the exact, fully-resolved command** - just copy that.
 
 **Tools**
 
