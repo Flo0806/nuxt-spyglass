@@ -28,7 +28,7 @@ const npmx = 'https://npmx.dev/package/nuxt-spyglass'
             width="14"
             height="14"
           >
-          NPMX
+          npmx
         </a>
         <a
           class="ghost"
