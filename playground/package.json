@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "nuxt-spyglass": "workspace:*",
-    "nuxt": "^4.4.6"
+    "nuxt": "^4.4.6",
+    "evlog": "^2.18.1"
   }
 }

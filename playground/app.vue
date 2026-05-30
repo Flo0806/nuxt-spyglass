@@ -24,10 +24,23 @@
     <button @click="serverThrow">
       server throw
     </button>
+
+    <h2>evlog (does spyglass catch it?)</h2>
+    <button @click="evlogServer">
+      evlog server (wide event)
+    </button>
+    <button @click="() => log.info('evlog-client', 'hello from evlog client')">
+      evlog client info
+    </button>
+    <button @click="() => log.error('evlog-client', 'an evlog client error')">
+      evlog client error
+    </button>
   </div>
 </template>
 
 <script setup lang="ts">
 const serverLog = () => $fetch('/api/demo/log')
 const serverThrow = () => $fetch('/api/demo/throw').catch(() => {})
+const evlogServer = () => $fetch('/api/demo/evlog')
+// `log` is auto-imported by the evlog/nuxt module on the client.
 </script>
