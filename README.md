@@ -151,6 +151,25 @@ In `.vscode/mcp.json`:
 
 Once connected, just ask your agent things like *"use spyglass to show the recent errors"* or *"get the logs for pageLoadId …"*.
 
+## 🧩 evlog integration
+
+Using [evlog](https://evlog.dev) for structured logging? Spyglass captures it automatically - no extra setup. evlog emits one structured *wide event* per request through its `evlog:drain` Nitro hook; Spyglass listens on that hook and reads the **structured event directly**, so it works even with evlog's default (console-less) setup.
+
+- Each per-request `log.info/warn(...)` becomes its own entry.
+- The wide event becomes a request summary (`[evlog] GET /api/x -> 200`) carrying evlog's fields and the error stack.
+- Entries are correlated into the same `pageLoadId`/`requestId` as the rest of the page load.
+
+**Browser-side evlog logs** are captured too, once you enable evlog's transport so they reach the server:
+
+```ts
+export default defineNuxtConfig({
+  modules: ['nuxt-spyglass', 'evlog/nuxt'],
+  evlog: { transport: { enabled: true } },
+})
+```
+
+Spyglass never imports evlog - if evlog isn't installed, the hook simply never fires.
+
 ## Contribution
 
 <details>
