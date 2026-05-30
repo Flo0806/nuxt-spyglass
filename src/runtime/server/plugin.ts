@@ -3,15 +3,10 @@ import { defineNitroPlugin, useRuntimeConfig } from 'nitropack/runtime'
 import { getRequestHeader } from 'h3'
 import { consola } from 'consola'
 import { createNdjsonStore } from '../utils/ndjson-store'
+import { isUuid } from '../utils/correlation'
 import { createReporter } from './reporter'
+import { appendEvlogDrain, type EvlogDrainContext } from './evlog'
 import type { SpyglassNitroApp } from './shared'
-
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-
-/** Only trust a client-supplied page id if it is a real UUID (avoids HTML injection). */
-function isUuid(value: string | undefined): value is string {
-  return typeof value === 'string' && UUID_PATTERN.test(value)
-}
 
 /**
  * Registers Spyglass' consola reporter, routes plain `console.*` calls through
@@ -30,6 +25,17 @@ export default defineNitroPlugin((nitroApp) => {
   consola.wrapConsole()
 
   ;(nitroApp as SpyglassNitroApp).spyglassStore = store
+
+  // evlog integration: apps using evlog emit one structured "wide event" per
+  // request through this Nitro hook. Listening here captures evlog's logs even
+  // in its console-less default (we read the event, not its rendered output) -
+  // and client logs too, once the user enables evlog's transport (those POST to
+  // /api/_evlog/ingest, which runs through this same hook). A harmless no-op
+  // when evlog isn't installed. evlog augments Nitro's hook types, which we
+  // deliberately don't import, hence the precise typed cast.
+  ;(nitroApp.hooks as unknown as {
+    hook(name: 'evlog:drain', cb: (ctx: EvlogDrainContext) => void): void
+  }).hook('evlog:drain', ctx => appendEvlogDrain(store, ctx))
 
   // Per request: a unique requestId, plus the pageLoadId carried by the client
   // (falls back to the requestId, which makes an SSR document its own page root).
