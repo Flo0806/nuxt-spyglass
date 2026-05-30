@@ -1,6 +1,7 @@
 import { appendFile, mkdir, rename, rm, stat } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { dirname } from 'node:path'
+import { scrubEntry } from './scrub'
 import type { LogEntry } from '../types'
 
 export interface NdjsonStoreOptions {
@@ -36,7 +37,8 @@ export function createNdjsonStore(filePath: string, options: NdjsonStoreOptions 
       size = existsSync(filePath) ? (await stat(filePath)).size : 0
     }
 
-    const line = `${JSON.stringify(entry)}\n`
+    // Redact secrets at the persistence boundary so no capture path can leak.
+    const line = `${JSON.stringify(scrubEntry(entry))}\n`
     const bytes = Buffer.byteLength(line)
 
     // Rotate before writing so the active file never exceeds the cap. A single
