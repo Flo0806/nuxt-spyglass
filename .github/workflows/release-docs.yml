@@ -1,0 +1,70 @@
+name: Release Docs
+
+on:
+  push:
+    tags:
+      - "docs-v*"
+
+env:
+  IMAGE: ghcr.io/flo0806/nuxt-spyglass-docs
+
+jobs:
+  build-and-push:
+    name: Build & push docs image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get version from tag
+        id: version
+        run: echo "version=${GITHUB_REF#refs/tags/docs-v}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=raw,value=latest
+            type=raw,value=${{ steps.version.outputs.version }}
+
+      - name: Build and push docs image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docs/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: spyglass docs v${{ steps.version.outputs.version }}
+          body: |
+            Docs site image: `ghcr.io/flo0806/nuxt-spyglass-docs:${{ steps.version.outputs.version }}`
+
+            ```bash
+            docker pull ghcr.io/flo0806/nuxt-spyglass-docs:${{ steps.version.outputs.version }}
+            ```
+          prerelease: ${{ contains(steps.version.outputs.version, 'alpha') || contains(steps.version.outputs.version, 'beta') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
