@@ -58,13 +58,12 @@ export default defineNuxtModule<ModuleOptions>({
       handler: resolver.resolve('./runtime/server/ingest.post'),
     })
 
-    // Print ready-to-run, fully-resolved commands so neither the developer nor
-    // an AI agent has to guess install paths (works in monorepos too).
+    // Print ready-to-run commands (same short `npx` form as the docs) so neither
+    // the developer nor an AI agent has to guess anything. npx resolves the bins
+    // from the local install; the log file path is absolute.
     const logger = useLogger('spyglass')
-    const cliBin = resolver.resolve('./cli.mjs')
-    const mcpBin = resolver.resolve('./mcp.mjs')
     logger.info(`active - logging to ${logFile}`)
-    logger.info(`live log viewer:  node ${cliBin} ${logFile}`)
-    logger.info(`MCP server for AI agents (e.g. claude mcp add spyglass -- ...):  node ${mcpBin} ${logFile}`)
+    logger.info(`live log viewer:  npx nuxt-spyglass ${logFile}`)
+    logger.info(`MCP server for AI agents (e.g. claude mcp add spyglass -- ...):  npx -p nuxt-spyglass nuxt-spyglass-mcp ${logFile}`)
   },
 })
