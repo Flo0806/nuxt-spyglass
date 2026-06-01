@@ -5,6 +5,8 @@ import { formatArgs, extractStack } from './utils/normalize'
 
 const INGEST_URL = '/_spyglass/ingest'
 const FLUSH_INTERVAL = 2000
+/** Ship promptly during bursts so a single batch never grows unwieldy. */
+const FLUSH_THRESHOLD = 50
 
 /** Adopt the page id the server injected, or mint one for non-SSR loads. */
 function resolvePageLoadId(): string {
@@ -50,6 +52,10 @@ const plugin: ObjectPlugin = defineNuxtPlugin(() => {
       route: window.location.pathname,
       pageLoadId,
     })
+    // A burst (e.g. on route change) must not pile up into one huge request.
+    if (buffer.length >= FLUSH_THRESHOLD) {
+      flush()
+    }
   }
 
   const levels: LogLevel[] = ['log', 'info', 'warn', 'error', 'debug']
@@ -87,12 +93,14 @@ const plugin: ObjectPlugin = defineNuxtPlugin(() => {
       return
     }
     const batch = buffer.splice(0, buffer.length)
-    // Use native fetch and swallow failures: logging must never disrupt the app.
+    // Plain fetch and swallow failures: logging must never disrupt the app.
+    // NOT `keepalive` - that caps the *combined* in-flight body at 64 KB, so a
+    // burst silently loses the whole batch. keepalive belongs only on the
+    // pagehide path below, where the request must outlive the page.
     nativeFetch(INGEST_URL, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(batch),
-      keepalive: true,
     }).catch(() => {})
   }
 
