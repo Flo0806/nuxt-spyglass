@@ -117,7 +117,7 @@ Framework noise (Vue warnings, devtools, build lifecycle) is excluded by default
 ### Claude Code
 
 ```bash
-claude mcp add --transport stdio spyglass -- \
+claude mcp add spyglass -- \
   npx -p nuxt-spyglass nuxt-spyglass-mcp /abs/path/to/your-app/.data/spyglass/logs.ndjson
 ```
 

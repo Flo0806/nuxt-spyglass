@@ -57,7 +57,7 @@ const agents: { id: Agent, label: string, fileLabel: string, code: string }[] = 
     id: 'claude',
     label: 'Claude Code',
     fileLabel: 'terminal',
-    code: `claude mcp add --transport stdio spyglass -- \\
+    code: `claude mcp add spyglass -- \\
   npx -p nuxt-spyglass nuxt-spyglass-mcp /abs/path/to/your-app/.data/spyglass/logs.ndjson`,
   },
   {
