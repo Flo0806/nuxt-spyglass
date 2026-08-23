@@ -6,6 +6,7 @@ import { createNdjsonStore } from '../utils/ndjson-store'
 import { isUuid } from '../utils/correlation'
 import { createReporter } from './reporter'
 import { appendEvlogDrain, type EvlogDrainContext } from './evlog'
+import { currentRequestContext } from './request-context'
 import type { SpyglassNitroApp } from './shared'
 
 /**
@@ -35,7 +36,7 @@ export default defineNitroPlugin((nitroApp) => {
   // deliberately don't import, hence the precise typed cast.
   ;(nitroApp.hooks as unknown as {
     hook(name: 'evlog:drain', cb: (ctx: EvlogDrainContext) => void): void
-  }).hook('evlog:drain', ctx => appendEvlogDrain(store, ctx))
+  }).hook('evlog:drain', ctx => appendEvlogDrain(store, ctx, currentRequestContext()))
 
   // Per request: a unique requestId, plus the pageLoadId carried by the client
   // (falls back to the requestId, which makes an SSR document its own page root).

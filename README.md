@@ -61,6 +61,10 @@ export default defineNuxtConfig({
     enabled: true,
     // NDJSON log file; relative paths resolve against the project root.
     logFile: '.data/spyglass/logs.ndjson',
+    // Rotate once the active file reaches this size (keeps at most two files).
+    maxFileSize: 5 * 1024 * 1024,
+    // Print the MCP connection state and setup command on startup.
+    mcpHint: true,
   },
 })
 ```
@@ -77,7 +81,7 @@ export default defineNuxtConfig({
 A built-in terminal viewer for **you** (the human) - run it in a second terminal next to your dev server:
 
 ```bash
-npx nuxt-spyglass                  # uses .data/spyglass/logs.ndjson in the current folder
+npx nuxt-spyglass                  # finds this project's log file by itself
 npx nuxt-spyglass <path-to-logs>   # or point it at the file explicitly
 ```
 
@@ -97,10 +101,11 @@ Spyglass ships `nuxt-spyglass-mcp`, a lightweight **stdio MCP server** that read
 - Your AI agent **launches the MCP server itself** - you never run it manually or keep it running.
 - Keep your **Nuxt dev server running** (it produces the logs); the MCP server only reads the file on demand.
 - After registering the server, **start a new agent session** so the tools load.
+- **No paths, no per-project setup.** The server starts in the directory your AI client was opened in and finds that project's log file itself - including monorepo layouts like `packages/app/.data/spyglass/logs.ndjson`. Register it once and it serves every project you open, always the current one.
 
-The server takes the path to your log file as its only argument (use an absolute path). `nuxt-spyglass-mcp` is a binary **inside** the `nuxt-spyglass` package, so launch it with `npx -p nuxt-spyglass nuxt-spyglass-mcp …` (or `node …/node_modules/nuxt-spyglass/dist/mcp.mjs …`).
+`nuxt-spyglass-mcp` is a binary **inside** the `nuxt-spyglass` package, so launch it with `npx -p nuxt-spyglass nuxt-spyglass-mcp` (or `node …/node_modules/nuxt-spyglass/dist/mcp.mjs`). Pass a log file path as the first argument only if your client starts the server somewhere other than your project, or if you set a custom `logFile`.
 
-> 💡 Easiest: when the module starts in dev it **logs the exact, fully-resolved command** - just copy that.
+> 💡 Not sure whether it is connected? The module prints the state on every dev start - and `spyglass_status` answers it from inside the chat.
 
 **Tools**
 
@@ -108,20 +113,22 @@ The server takes the path to your log file as its only argument (use an absolute
 | --- | --- |
 | `recent_errors` | The most recent errors, browser and server |
 | `recent_logs` | Recent logs, optionally filtered by level, source or start time |
-| `logs_for_page` | Every log of one page load by `pageLoadId` - the full correlated tree |
+| `logs_for_page` | Every log of one page load by `pageLoadId` - the full correlated tree (capped at 200 entries by default) |
 | `search` | Case-insensitive substring search across messages |
 | `logs_since_last_check` | Only what arrived since the previous call - to see what changed after an action (e.g. after editing code) |
+| `spyglass_status` | Which project's logs are being read, how many entries there are, and whether the dev server is still running |
 
 Framework noise (Vue warnings, devtools, build lifecycle) is excluded by default; pass `includeNoise: true` to any tool to see everything.
 
 ### Claude Code
 
+Run this **once** - `--scope user` makes it available in every project you ever open:
+
 ```bash
-claude mcp add spyglass -- \
-  npx -p nuxt-spyglass nuxt-spyglass-mcp /abs/path/to/your-app/.data/spyglass/logs.ndjson
+claude mcp add --scope user spyglass -- npx -y -p nuxt-spyglass nuxt-spyglass-mcp
 ```
 
-Then run `/mcp` in a new session to confirm `spyglass` is connected.
+Then run `/mcp` in a new session to confirm `spyglass` is connected. There is nothing to repeat for the next project.
 
 ### Codex
 
@@ -130,7 +137,7 @@ In `~/.codex/config.toml`:
 ```toml
 [mcp_servers.spyglass]
 command = "npx"
-args = ["-p", "nuxt-spyglass", "nuxt-spyglass-mcp", "/abs/path/to/your-app/.data/spyglass/logs.ndjson"]
+args = ["-y", "-p", "nuxt-spyglass", "nuxt-spyglass-mcp"]
 ```
 
 ### GitHub Copilot (VS Code)
@@ -143,13 +150,13 @@ In `.vscode/mcp.json`:
     "spyglass": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-p", "nuxt-spyglass", "nuxt-spyglass-mcp", "/abs/path/to/your-app/.data/spyglass/logs.ndjson"]
+      "args": ["-y", "-p", "nuxt-spyglass", "nuxt-spyglass-mcp"]
     }
   }
 }
 ```
 
-Once connected, just ask your agent things like *"use spyglass to show the recent errors"* or *"get the logs for pageLoadId …"*.
+Once connected, just ask your agent things like *"use spyglass to show the recent errors"* or *"get the logs for pageLoadId …"*. The server also tells the agent what it is for, so a plain *"why is the page broken?"* is usually enough.
 
 ## 🧩 evlog integration
 

@@ -1,6 +1,7 @@
 import type { NdjsonStore } from '../utils/ndjson-store'
 import { toLogLevel } from '../utils/normalize'
 import { isUuid } from '../utils/correlation'
+import type { RequestContext } from './request-context'
 
 /**
  * Minimal shape of evlog's `evlog:drain` hook payload. Typed locally on purpose:
@@ -63,17 +64,19 @@ function errorStack(error: unknown): string | undefined {
  *    structured fields (and the error stack, if any).
  *
  * Works regardless of evlog's console settings - we read the structured event,
- * not its rendered output. Correlation reuses the `x-spyglass-page` header when
- * the browser sent one (so evlog entries line up with the rest of the page
- * load), otherwise evlog's own request id.
+ * not its rendered output. Correlation prefers the ids Spyglass already put on
+ * the request, so evlog entries and console entries of the same request share
+ * both ids; only outside a request context do we fall back to evlog's own id
+ * and the `x-spyglass-page` header.
  */
-export function appendEvlogDrain(store: NdjsonStore, ctx: EvlogDrainContext): void {
+export function appendEvlogDrain(store: NdjsonStore, ctx: EvlogDrainContext, requestContext: RequestContext = {}): void {
   const { event, request, headers } = ctx
   const baseTs = toMillis(event.timestamp, Date.now())
-  const requestId = request?.requestId ?? event.requestId
+  const evlogRequestId = request?.requestId ?? event.requestId
   const pageHeader = headers?.['x-spyglass-page']
-  const pageLoadId = isUuid(pageHeader) ? pageHeader : requestId
-  const route = request?.path
+  const requestId = requestContext.requestId ?? evlogRequestId
+  const pageLoadId = requestContext.pageLoadId ?? (isUuid(pageHeader) ? pageHeader : evlogRequestId)
+  const route = request?.path ?? requestContext.route
 
   for (const entry of event.requestLogs ?? []) {
     store.append({

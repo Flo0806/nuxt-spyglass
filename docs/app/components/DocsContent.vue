@@ -20,9 +20,10 @@ const toc = [
 const tools = [
   { name: 'recent_errors', desc: 'The most recent errors, browser and server.' },
   { name: 'recent_logs', desc: 'Recent logs, optionally filtered by level, source or start time.' },
-  { name: 'logs_for_page', desc: 'Every log of one page load by pageLoadId - the full correlated tree.' },
+  { name: 'logs_for_page', desc: 'Every log of one page load by pageLoadId - the full correlated tree (capped at 200 entries by default).' },
   { name: 'search', desc: 'Case-insensitive substring search across messages.' },
   { name: 'logs_since_last_check', desc: 'Only what arrived since the previous call - see what changed after an action.' },
+  { name: 'spyglass_status', desc: 'Which project is being read, how many entries there are, and whether the dev server is still running.' },
 ]
 
 const installNpx = 'npx nuxt module add nuxt-spyglass'
@@ -40,9 +41,11 @@ const configFull = `export default defineNuxtConfig({
     logFile: '.data/spyglass/logs.ndjson',
     // Rotate once the active file reaches this size (keeps at most two files).
     maxFileSize: 5 * 1024 * 1024,
+    // Print the MCP connection state and setup command on startup.
+    mcpHint: true,
   },
 })`
-const cliUsage = `npx nuxt-spyglass                  # uses .data/spyglass/logs.ndjson
+const cliUsage = `npx nuxt-spyglass                  # finds this project's log file by itself
 npx nuxt-spyglass <path-to-logs>   # or point it at the file explicitly`
 const evlogConfig = `export default defineNuxtConfig({
   modules: ['nuxt-spyglass', 'evlog/nuxt'],
@@ -57,8 +60,7 @@ const agents: { id: Agent, label: string, fileLabel: string, code: string }[] = 
     id: 'claude',
     label: 'Claude Code',
     fileLabel: 'terminal',
-    code: `claude mcp add spyglass -- \\
-  npx -p nuxt-spyglass nuxt-spyglass-mcp /abs/path/to/your-app/.data/spyglass/logs.ndjson`,
+    code: `claude mcp add --scope user spyglass -- npx -y -p nuxt-spyglass nuxt-spyglass-mcp`,
   },
   {
     id: 'codex',
@@ -66,7 +68,7 @@ const agents: { id: Agent, label: string, fileLabel: string, code: string }[] = 
     fileLabel: '~/.codex/config.toml',
     code: `[mcp_servers.spyglass]
 command = "npx"
-args = ["-p", "nuxt-spyglass", "nuxt-spyglass-mcp", "/abs/path/to/your-app/.data/spyglass/logs.ndjson"]`,
+args = ["-y", "-p", "nuxt-spyglass", "nuxt-spyglass-mcp"]`,
   },
   {
     id: 'copilot',
@@ -77,7 +79,7 @@ args = ["-p", "nuxt-spyglass", "nuxt-spyglass-mcp", "/abs/path/to/your-app/.data
     "spyglass": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-p", "nuxt-spyglass", "nuxt-spyglass-mcp", "/abs/path/to/your-app/.data/spyglass/logs.ndjson"]
+      "args": ["-y", "-p", "nuxt-spyglass", "nuxt-spyglass-mcp"]
     }
   }
 }`,
@@ -176,6 +178,11 @@ const activeAgent = computed(() => agents.find(a => a.id === agent.value)!)
             <td><code>5&nbsp;MB</code></td>
             <td>Rotate once the active file reaches this size. Keeps at most two files.</td>
           </tr>
+          <tr>
+            <td><code>mcpHint</code></td>
+            <td><code>true</code></td>
+            <td>Print the MCP connection state and setup command on startup.</td>
+          </tr>
         </tbody>
       </table>
     </DocSection>
@@ -226,6 +233,12 @@ const activeAgent = computed(() => agents.find(a => a.id === agent.value)!)
         <li>Your AI agent <strong>launches the server itself</strong> - you never run it manually.</li>
         <li>Keep your <strong>Nuxt dev server running</strong>; the MCP server only reads the file on demand.</li>
         <li>After registering, <strong>start a new agent session</strong> so the tools load.</li>
+        <li>
+          <strong>No paths, no per-project setup.</strong> The server starts in the directory your
+          AI client was opened in and finds that project's log file itself - monorepo layouts like
+          <code>packages/app/.data/spyglass/logs.ndjson</code> included. Register it once, it serves
+          every project you open, always the current one.
+        </li>
       </ul>
 
       <h3>Tools</h3>

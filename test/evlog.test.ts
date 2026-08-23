@@ -56,4 +56,21 @@ describe('appendEvlogDrain', () => {
     })
     expect(store.entries[0]?.pageLoadId).toBe('req-2')
   })
+
+  it('prefers the ids Spyglass put on the request over evlog\'s own', () => {
+    const store = fakeStore()
+    const ctx: EvlogDrainContext = {
+      event: { status: 200, requestLogs: [{ level: 'info', message: 'hello' }] },
+      request: { method: 'GET', path: '/freeform', requestId: 'evlog-own-id' },
+      headers: { 'x-spyglass-page': '80d04154-9e88-446c-a8fe-caaea2914ae8' },
+    }
+
+    appendEvlogDrain(store, ctx, { requestId: 'spyglass-req', pageLoadId: 'spyglass-page', route: '/freeform' })
+
+    expect(store.entries).toHaveLength(2)
+    for (const entry of store.entries) {
+      expect(entry.requestId).toBe('spyglass-req')
+      expect(entry.pageLoadId).toBe('spyglass-page')
+    }
+  })
 })
