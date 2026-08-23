@@ -10,3 +10,9 @@ dist
 **/dist
 .git
 **/*.log
+
+# The root tsconfig extends `.nuxt/tsconfig.json`, which is generated and not
+# part of the image. Since Nuxt 4.5 the docs build picks that config up from the
+# workspace root and then fails on the missing file - the docs project has its
+# own tsconfig and needs none of it.
+/tsconfig.json
