@@ -5,13 +5,17 @@ import { createScreen, createDraw, createInputManager, showSearch } from '@jano-
 import type { KeyEvent } from '@jano-editor/ui'
 import type { LogEntry, LogLevel } from '../runtime/types'
 import { readEntries } from '../mcp/queries'
+import { createLogFileResolver } from '../shared/log-file'
 
 if (!process.stdin.isTTY) {
   process.stderr.write('nuxt-spyglass: needs an interactive terminal (TTY).\n')
   process.exit(1)
 }
 
-const logFile = resolve(process.cwd(), process.argv[2] ?? '.data/spyglass/logs.ndjson')
+// Without an argument we find the project's log ourselves; until a dev server
+// creates one we show the path it would appear at and keep looking.
+const resolveLogFile = createLogFileResolver(process.argv[2], 1000)
+let logFile = resolveLogFile().file ?? resolve(process.cwd(), '.data/spyglass/logs.ndjson')
 
 type RGB = [number, number, number]
 const ACCENT: RGB = [0, 220, 130]
@@ -72,7 +76,8 @@ function render(): void {
   }
   scrollTop = Math.max(0, Math.min(scrollTop, maxTop))
 
-  draw.text(0, 0, pad(` 🔭 nuxt-spyglass  ·  ${total} logs  ·  ${logFile}`, w), { fg: ACCENT })
+  const headline = existsSync(logFile) ? `${total} logs` : 'waiting for a dev server'
+  draw.text(0, 0, pad(` 🔭 nuxt-spyglass  ·  ${headline}  ·  ${logFile}`, w), { fg: ACCENT })
 
   for (let i = 0; i < lh; i++) {
     const idx = scrollTop + i
@@ -208,6 +213,13 @@ layer.on('resize', () => render())
 setInterval(() => {
   if (searchOpen) {
     return
+  }
+  // A dev server started after us writes to a file we have not seen yet.
+  if (!existsSync(logFile)) {
+    const found = resolveLogFile().file
+    if (found) {
+      logFile = found
+    }
   }
   const sig = fileSignature()
   if (sig !== lastSig) {

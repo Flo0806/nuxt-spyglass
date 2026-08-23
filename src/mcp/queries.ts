@@ -128,3 +128,32 @@ export function logsSince(entries: LogEntry[], cursor: SinceCursor | null, basel
   }
   return { fresh: sorted.slice(startIdx), cursor: makeCursor(sorted) }
 }
+
+export interface LogSummary {
+  total: number
+  /** How many of `total` are classified as framework noise (hidden by default). */
+  noise: number
+  byLevel: Partial<Record<LogLevel, number>>
+  bySource: Partial<Record<LogSource, number>>
+  firstTimestamp?: number
+  lastTimestamp?: number
+}
+
+/** Counts for the status tool: what is in this log file, at a glance. */
+export function summarize(entries: LogEntry[]): LogSummary {
+  const summary: LogSummary = { total: entries.length, noise: 0, byLevel: {}, bySource: {} }
+  for (const entry of entries) {
+    if (entry.noise) {
+      summary.noise++
+    }
+    summary.byLevel[entry.level] = (summary.byLevel[entry.level] ?? 0) + 1
+    summary.bySource[entry.source] = (summary.bySource[entry.source] ?? 0) + 1
+    if (summary.firstTimestamp === undefined || entry.timestamp < summary.firstTimestamp) {
+      summary.firstTimestamp = entry.timestamp
+    }
+    if (summary.lastTimestamp === undefined || entry.timestamp > summary.lastTimestamp) {
+      summary.lastTimestamp = entry.timestamp
+    }
+  }
+  return summary
+}

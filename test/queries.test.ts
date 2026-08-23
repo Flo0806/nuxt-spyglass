@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { recentLogs, recentErrors, search, logsForPage, logsSince } from '../src/mcp/queries'
+import { recentLogs, recentErrors, search, logsForPage, logsSince, summarize } from '../src/mcp/queries'
 import type { LogEntry } from '../src/runtime/types'
 
 function entry(p: Partial<LogEntry> & { timestamp: number }): LogEntry {
@@ -60,5 +60,24 @@ describe('logsSince (incremental cursor)', () => {
   it('returns nothing new when the cursor is at the head', () => {
     const { fresh } = logsSince(data, { ts: 4, tsCount: 1 })
     expect(fresh).toHaveLength(0)
+  })
+})
+
+describe('summarize', () => {
+  it('counts entries, noise, levels, sources and the time range', () => {
+    const summary = summarize(data)
+    expect(summary.total).toBe(5)
+    expect(summary.noise).toBe(1)
+    expect(summary.byLevel.error).toBe(2)
+    expect(summary.bySource.browser).toBe(1)
+    expect(summary.bySource.server).toBe(4)
+    expect(summary.firstTimestamp).toBe(1)
+    expect(summary.lastTimestamp).toBe(4)
+  })
+
+  it('stays empty-safe', () => {
+    const summary = summarize([])
+    expect(summary.total).toBe(0)
+    expect(summary.lastTimestamp).toBeUndefined()
   })
 })

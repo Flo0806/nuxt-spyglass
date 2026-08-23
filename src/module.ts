@@ -1,5 +1,6 @@
 import { isAbsolute, resolve } from 'node:path'
 import { defineNuxtModule, addPlugin, addImportsDir, addServerPlugin, addServerHandler, createResolver, useLogger } from '@nuxt/kit'
+import { detectMcpRegistration } from './shared/mcp-registration'
 
 export interface ModuleOptions {
   /**
@@ -11,6 +12,8 @@ export interface ModuleOptions {
   logFile?: string
   /** Rotate once the active log reaches this many bytes (keeps at most two files). */
   maxFileSize?: number
+  /** Print the MCP connection state and setup command on startup. */
+  mcpHint?: boolean
 }
 
 export default defineNuxtModule<ModuleOptions>({
@@ -25,6 +28,7 @@ export default defineNuxtModule<ModuleOptions>({
     enabled: true,
     logFile: '.data/spyglass/logs.ndjson',
     maxFileSize: 5 * 1024 * 1024,
+    mcpHint: true,
   },
   setup(options, nuxt) {
     // Dev-only tool: never ship capture into production builds.
@@ -58,12 +62,28 @@ export default defineNuxtModule<ModuleOptions>({
       handler: resolver.resolve('./runtime/server/ingest.post'),
     })
 
-    // Print ready-to-run commands (same short `npx` form as the docs) so neither
-    // the developer nor an AI agent has to guess anything. npx resolves the bins
-    // from the local install; the log file path is absolute.
+    // Both bins find this project's log file themselves, so the commands carry no
+    // paths - which is what makes the MCP registration a one-time, global thing.
     const logger = useLogger('spyglass')
     logger.info(`active - logging to ${logFile}`)
-    logger.info(`live log viewer:  npx nuxt-spyglass ${logFile}`)
-    logger.info(`MCP server for AI agents (e.g. claude mcp add spyglass -- ...):  npx -p nuxt-spyglass nuxt-spyglass-mcp ${logFile}`)
+
+    if (options.mcpHint !== false) {
+      const scope = detectMcpRegistration(nuxt.options.rootDir)
+      if (scope === 'user') {
+        logger.success('MCP connected (user scope - available in every project)')
+      }
+      else if (scope === 'project') {
+        logger.success('MCP connected (project scope via .mcp.json)')
+      }
+      else if (scope === 'local') {
+        logger.success('MCP connected for this project (`--scope user` would make it global)')
+      }
+      else {
+        logger.warn('MCP not connected. Run this once, it then covers every project:\n'
+          + '  claude mcp add --scope user spyglass -- npx -y -p nuxt-spyglass nuxt-spyglass-mcp')
+      }
+    }
+
+    logger.info('live log viewer:  npx nuxt-spyglass')
   },
 })
