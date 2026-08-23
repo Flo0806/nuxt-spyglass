@@ -29,10 +29,10 @@
     <button @click="evlogServer">
       evlog server (wide event)
     </button>
-    <button @click="() => log.info('evlog-client', 'hello from evlog client')">
+    <button @click="() => evlogLog.info('evlog-client', 'hello from evlog client')">
       evlog client info
     </button>
-    <button @click="() => log.error('evlog-client', 'an evlog client error')">
+    <button @click="() => evlogLog.error('evlog-client', 'an evlog client error')">
       evlog client error
     </button>
   </div>
@@ -42,5 +42,7 @@
 const serverLog = () => $fetch('/api/demo/log')
 const serverThrow = () => $fetch('/api/demo/throw').catch(() => {})
 const evlogServer = () => $fetch('/api/demo/evlog')
-// `log` is auto-imported by the evlog/nuxt module on the client.
+// evlog's nuxt module declares `log` as a plain global, not as a component
+// property - so alias it here to use it from the template.
+const evlogLog = log
 </script>

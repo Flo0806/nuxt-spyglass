@@ -8,8 +8,8 @@
     "generate": "nuxt generate"
   },
   "dependencies": {
-    "nuxt-spyglass": "workspace:*",
-    "nuxt": "^4.4.6",
-    "evlog": "^2.18.1"
+    "evlog": "^2.26.0",
+    "nuxt": "^4.5.2",
+    "nuxt-spyglass": "workspace:*"
   }
 }

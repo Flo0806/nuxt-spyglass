@@ -51,25 +51,25 @@
     "test:types": "vue-tsc --noEmit && cd playground && vue-tsc --noEmit"
   },
   "dependencies": {
-    "@jano-editor/ui": "1.0.0-alpha.7",
-    "@modelcontextprotocol/sdk": "^1.29.0",
-    "@nuxt/kit": "^4.4.6",
+    "@jano-editor/ui": "1.0.0-alpha.8",
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "@nuxt/kit": "^4.5.2",
     "consola": "^3.4.2",
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@nuxt/devtools": "^3.2.4",
-    "@nuxt/eslint-config": "^1.15.2",
-    "@nuxt/module-builder": "^1.0.2",
-    "@nuxt/schema": "^4.4.6",
-    "@nuxt/test-utils": "^4.0.3",
+    "@nuxt/devtools": "^3.4.2",
+    "@nuxt/eslint-config": "^1.17.0",
+    "@nuxt/module-builder": "^1.0.3",
+    "@nuxt/schema": "^4.5.2",
+    "@nuxt/test-utils": "^4.1.0",
     "@types/node": "latest",
     "changelogen": "^0.6.2",
-    "eslint": "^10.4.0",
-    "nuxt": "^4.4.6",
+    "eslint": "^10.9.0",
+    "nuxt": "^4.5.2",
     "typescript": "~6.0.3",
     "unbuild": "^3.6.1",
-    "vitest": "^4.1.7",
-    "vue-tsc": "^3.3.1"
+    "vitest": "^4.1.11",
+    "vue-tsc": "^3.3.11"
   }
 }
