@@ -85,7 +85,7 @@ npx nuxt-spyglass                  # finds this project's log file by itself
 npx nuxt-spyglass <path-to-logs>   # or point it at the file explicitly
 ```
 
-When the module starts in dev it also prints the exact command (with the resolved path), so you can just copy-paste it.
+The module prints this command on dev startup as well, next to the log file it writes to.
 
 - Live tail, newest at the bottom, auto-follows; scroll with `↑/↓`, `PageUp/Down`, `Home/End`, or the mouse wheel
 - **Browser + server logs interleaved**, colored by level, framework noise dimmed
@@ -103,7 +103,7 @@ Spyglass ships `nuxt-spyglass-mcp`, a lightweight **stdio MCP server** that read
 - After registering the server, **start a new agent session** so the tools load.
 - **No paths, no per-project setup.** The server starts in the directory your AI client was opened in and finds that project's log file itself - including monorepo layouts like `packages/app/.data/spyglass/logs.ndjson`. Register it once and it serves every project you open, always the current one.
 
-`nuxt-spyglass-mcp` is a binary **inside** the `nuxt-spyglass` package, so launch it with `npx -p nuxt-spyglass nuxt-spyglass-mcp` (or `node …/node_modules/nuxt-spyglass/dist/mcp.mjs`). Pass a log file path as the first argument only if your client starts the server somewhere other than your project, or if you set a custom `logFile`.
+`nuxt-spyglass-mcp` is a binary **inside** the `nuxt-spyglass` package, so launch it with `npx -p nuxt-spyglass nuxt-spyglass-mcp` (or `node …/node_modules/nuxt-spyglass/dist/mcp.mjs`). Pass a log file path as the first argument only if your client starts the server somewhere other than your project, or if you set a custom `logFile` - the `SPYGLASS_LOG_FILE` environment variable does the same.
 
 > 💡 Not sure whether it is connected? The module prints the state on every dev start - and `spyglass_status` answers it from inside the chat.
 

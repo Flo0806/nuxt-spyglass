@@ -216,7 +216,7 @@ const activeAgent = computed(() => agents.find(a => a.id === agent.value)!)
         <li><kbd>/</kbd> to search - jump to a hit, which briefly highlights. <kbd>q</kbd> or <kbd>Ctrl</kbd>+<kbd>C</kbd> to quit.</li>
       </ul>
       <blockquote>
-        On dev startup the module prints the exact command with the resolved path - just copy-paste it.
+        The module prints this command on dev startup as well, next to the log file it writes to.
       </blockquote>
     </DocSection>
 
@@ -237,7 +237,8 @@ const activeAgent = computed(() => agents.find(a => a.id === agent.value)!)
           <strong>No paths, no per-project setup.</strong> The server starts in the directory your
           AI client was opened in and finds that project's log file itself - monorepo layouts like
           <code>packages/app/.data/spyglass/logs.ndjson</code> included. Register it once, it serves
-          every project you open, always the current one.
+          every project you open, always the current one. Pass a path as the first argument (or set
+          <code>SPYGLASS_LOG_FILE</code>) only for a custom <code>logFile</code>.
         </li>
       </ul>
 
