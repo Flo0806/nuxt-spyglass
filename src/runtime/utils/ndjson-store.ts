@@ -21,7 +21,11 @@ export interface NdjsonStore {
  * Writes are serialised through a promise chain so lines never interleave.
  */
 export function createNdjsonStore(filePath: string, options: NdjsonStoreOptions = {}): NdjsonStore {
-  const maxFileSize = options.maxFileSize ?? 5 * 1024 * 1024
+  // A cap of 0 (or negative) would rotate on every single write; fall back to
+  // the default rather than shredding the log.
+  const DEFAULT_MAX_FILE_SIZE = 5 * 1024 * 1024
+  const requested = options.maxFileSize ?? DEFAULT_MAX_FILE_SIZE
+  const maxFileSize = requested > 0 ? requested : DEFAULT_MAX_FILE_SIZE
   const rotatedPath = `${filePath}.1`
 
   let queue: Promise<void> = Promise.resolve()

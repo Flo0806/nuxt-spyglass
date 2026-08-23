@@ -79,8 +79,11 @@ export default defineNuxtModule<ModuleOptions>({
         logger.success('MCP connected for this project (`--scope user` would make it global)')
       }
       else {
-        logger.warn('MCP not connected. Run this once, it then covers every project:\n'
-          + '  claude mcp add --scope user spyglass -- npx -y -p nuxt-spyglass nuxt-spyglass-mcp')
+        // Only Claude Code's config is readable, so "not found" may simply mean
+        // "another client" - phrase it as an offer, not as a problem.
+        logger.info('MCP server for AI agents: npx -p nuxt-spyglass nuxt-spyglass-mcp\n'
+          + '  Claude Code, once for every project:  claude mcp add --scope user spyglass -- npx -y -p nuxt-spyglass nuxt-spyglass-mcp\n'
+          + '  Already set up elsewhere? Silence this with spyglass: { mcpHint: false }')
       }
     }
 

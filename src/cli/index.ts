@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { resolve } from 'node:path'
 import { existsSync, statSync } from 'node:fs'
-import { createScreen, createDraw, createInputManager, showSearch } from '@jano-editor/ui'
+import { createScreen, createDraw, createInputManager, showSearch, stringWidth, sliceWidth } from '@jano-editor/ui'
 import type { KeyEvent } from '@jano-editor/ui'
 import type { LogEntry, LogLevel } from '../runtime/types'
 import { readEntries } from '../mcp/queries'
@@ -55,8 +55,10 @@ function fileSignature(): string {
   return `${sig(logFile)}|${sig(`${logFile}.1`)}`
 }
 
+/** Pad/truncate by display columns - an emoji or CJK glyph occupies two. */
 function pad(text: string, width: number): string {
-  return text.length >= width ? text.slice(0, width) : text + ' '.repeat(width - text.length)
+  const columns = stringWidth(text)
+  return columns >= width ? sliceWidth(text, width) : text + ' '.repeat(width - columns)
 }
 
 function timeOf(ts: number): string {
@@ -100,7 +102,7 @@ function render(): void {
     draw.text(x, y, pad(entry.source, 7), { fg: dim ? NOISE : (SOURCE_FG[entry.source] ?? MSG), bg })
     x += 8
     const message = (entry.message ?? '').replace(/\s+/g, ' ')
-    draw.text(x, y, message.slice(0, Math.max(0, w - x)), { fg: dim ? NOISE : MSG, bg })
+    draw.text(x, y, sliceWidth(message, Math.max(0, w - x)), { fg: dim ? NOISE : MSG, bg })
   }
 
   const footer = follow

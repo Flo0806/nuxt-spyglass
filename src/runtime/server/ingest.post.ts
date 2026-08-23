@@ -2,6 +2,7 @@ import { defineEventHandler, readBody } from 'h3'
 import { useNitroApp } from 'nitropack/runtime'
 import type { LogEntry, LogLevel } from '../types'
 import { isNoise } from '../utils/normalize'
+import { isUuid } from '../utils/correlation'
 import type { SpyglassNitroApp } from './shared'
 
 const LEVELS: LogLevel[] = ['debug', 'info', 'log', 'warn', 'error']
@@ -16,7 +17,7 @@ function toEntry(raw: Partial<LogEntry>): LogEntry {
     message,
     stack: typeof raw.stack === 'string' ? raw.stack : undefined,
     route: typeof raw.route === 'string' ? raw.route : undefined,
-    pageLoadId: typeof raw.pageLoadId === 'string' ? raw.pageLoadId : undefined,
+    pageLoadId: isUuid(typeof raw.pageLoadId === 'string' ? raw.pageLoadId : undefined) ? raw.pageLoadId : undefined,
     noise: isNoise(message, 'browser') || undefined,
   }
 }

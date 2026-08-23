@@ -3,17 +3,18 @@ import type { ConsolaReporter } from 'consola'
 import type { NdjsonStore } from '../utils/ndjson-store'
 import { toLogLevel, formatArgs, extractStack, isNoise } from '../utils/normalize'
 
-/** Read the current request's correlation ids from Nitro's async context, if any. */
-function currentIds(): { requestId?: string, pageLoadId?: string } {
+/** Read the current request's correlation ids and route from Nitro's async context, if any. */
+function currentContext(): { requestId?: string, pageLoadId?: string, route?: string } {
   try {
-    const { context } = useEvent()
+    const event = useEvent()
     return {
-      requestId: context.spyglassRequestId as string | undefined,
-      pageLoadId: context.spyglassPageLoadId as string | undefined,
+      requestId: event.context.spyglassRequestId as string | undefined,
+      pageLoadId: event.context.spyglassPageLoadId as string | undefined,
+      route: event.path,
     }
   }
   catch {
-    // Logged outside a request (startup, background task) - no ids.
+    // Logged outside a request (startup, background task) - no context.
     return {}
   }
 }
@@ -31,7 +32,7 @@ export function createReporter(store: NdjsonStore): ConsolaReporter {
       if (message.startsWith('[request error]')) {
         return
       }
-      const { requestId, pageLoadId } = currentIds()
+      const { requestId, pageLoadId, route } = currentContext()
       store.append({
         timestamp: logObj.date instanceof Date ? logObj.date.getTime() : Date.now(),
         level: toLogLevel(logObj.type),
@@ -40,6 +41,7 @@ export function createReporter(store: NdjsonStore): ConsolaReporter {
         stack: extractStack(args),
         requestId,
         pageLoadId,
+        route,
         noise: isNoise(message, 'server') || undefined,
       })
     },

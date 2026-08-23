@@ -25,6 +25,14 @@
       server throw
     </button>
 
+    <h2>Correlation ($fetch vs useFetch)</h2>
+    <button @click="probeFetch">
+      probe via $fetch
+    </button>
+    <button @click="() => probeUseFetch()">
+      probe via useFetch
+    </button>
+
     <h2>evlog (does spyglass catch it?)</h2>
     <button @click="evlogServer">
       evlog server (wide event)
@@ -42,6 +50,15 @@
 const serverLog = () => $fetch('/api/demo/log')
 const serverThrow = () => $fetch('/api/demo/throw').catch(() => {})
 const evlogServer = () => $fetch('/api/demo/evlog')
+// Both hit the same endpoint; the captured server entries show whether the page
+// id travelled - $fetch goes through globalThis, useFetch through Nuxt's own
+// module-level binding.
+const probeFetch = () => $fetch('/api/demo/correlate', { query: { via: 'fetch' } })
+const { execute: probeUseFetch } = useFetch('/api/demo/correlate', {
+  query: { via: 'useFetch' },
+  immediate: false,
+  key: 'correlation-probe',
+})
 // evlog's nuxt module declares `log` as a plain global, not as a component
 // property - so alias it here to use it from the template.
 const evlogLog = log

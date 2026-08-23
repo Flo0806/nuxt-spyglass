@@ -3,7 +3,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js'
 import { existsSync } from 'node:fs'
-import { dirname } from 'node:path'
+import { dirname, join } from 'node:path'
 import { z } from 'zod'
 import type { LogEntry } from '../runtime/types'
 import { readEntries, recentLogs, recentErrors, logsForPage, search, logsSince, summarize } from './queries'
@@ -53,6 +53,8 @@ function withEntries(run: (entries: LogEntry[]) => CallToolResult): CallToolResu
   return run(readEntries(resolved.file))
 }
 
+const DEFAULT_LOG_LAYOUT = join('.data', 'spyglass', 'logs.ndjson')
+
 const LIMIT = z.number().int().positive().max(500).optional()
 const INCLUDE_NOISE = z.boolean().optional().describe(
   'Include framework/ambient noise (Vue warnings, devtools, build lifecycle). Default: excluded. Set true to see everything, e.g. to reason about timing/ordering.',
@@ -91,8 +93,17 @@ server.registerTool('recent_logs', {
 
 server.registerTool('logs_for_page', {
   description: 'Every log of one page load by pageLoadId, browser and server interleaved - the full correlated story, noise included. Use it after another tool gave you a pageLoadId, typically to find the server request behind a client-side error.',
-  inputSchema: { pageLoadId: z.string() },
-}, ({ pageLoadId }) => withEntries(entries => render(logsForPage(entries, pageLoadId))))
+  inputSchema: { pageLoadId: z.string(), limit: LIMIT },
+}, ({ pageLoadId, limit }) => withEntries((entries) => {
+  // A busy page load can hold thousands of entries; never flood the caller.
+  const all = logsForPage(entries, pageLoadId)
+  const shown = all.slice(-(limit ?? 200))
+  if (shown.length === 0) {
+    return text('No matching log entries.')
+  }
+  const note = shown.length < all.length ? `(the last ${shown.length} of ${all.length} entries)\n` : ''
+  return text(note + shown.map(formatEntry).join('\n'))
+}))
 
 server.registerTool('search', {
   description: 'Case-insensitive substring search across log messages. Use it when you know a marker to look for - a message, an id, a route, a component name. Framework noise is excluded by default; set includeNoise to see everything.',
@@ -110,9 +121,12 @@ function ago(timestamp: number): string {
   return `${Math.round(seconds / 3600)}h ago`
 }
 
-/** `<project>/.data/spyglass/logs.ndjson` - three levels up is the project root. */
-function projectRoot(file: string): string {
-  return dirname(dirname(dirname(file)))
+/**
+ * `<project>/.data/spyglass/logs.ndjson` - three levels up is the project root.
+ * Only meaningful for the default layout; a custom log path tells us nothing.
+ */
+function projectRoot(file: string): string | null {
+  return file.endsWith(DEFAULT_LOG_LAYOUT) ? dirname(dirname(dirname(file))) : null
 }
 
 server.registerTool('spyglass_status', {
@@ -141,8 +155,9 @@ server.registerTool('spyglass_status', {
   const levels = Object.entries(summary.byLevel).map(([level, count]) => `${count} ${level}`).join(', ')
   const sources = Object.entries(summary.bySource).map(([source, count]) => `${count} ${source}`).join(', ')
 
+  const root = projectRoot(resolved.file)
   const lines = [
-    `Project:  ${projectRoot(resolved.file)}`,
+    ...(root ? [`Project:  ${root}`] : []),
     `Log file: ${resolved.file} (${origin})`,
     `Entries:  ${summary.total} (${summary.noise} framework noise, hidden unless includeNoise is set)`,
     `Levels:   ${levels || 'none'}`,
